@@ -1,6 +1,7 @@
 import pygame
 from pygame.draw import *
 
+
 pygame.init()
 
 FPS = 30

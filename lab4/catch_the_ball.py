@@ -151,8 +151,8 @@ def menu():
     name = ""
     while not finished:
         clock.tick(FPS)
-        print_text("Enter your name: " + name, GREEN, (100, 300), 70)
-        print_text("Press RightMouseButton to start", GREEN, (150, 400), 70)
+        print_text("Enter your name: " + name, GREEN, (150, 300), 70)
+        print_text("Press ENTER to start", GREEN, (150, 400), 70)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -163,12 +163,15 @@ def menu():
                 if event.key == 13:
                     finished = True
                     is_game = True
+                if event.key == pygame.K_BACKSPACE:
+                    if name != "":
+                        name = name[:-1]
                 else:
                     name += event.unicode
 
         pygame.display.update()
         screen.fill(BLACK)
-
+    name = name[:-1]
     user = [is_game, name]
     return user
 
@@ -183,6 +186,7 @@ def read_from_file():
     f = open('scores.txt', 'r')
     data = f.read()
     return data
+
 
 sc = 0
 pygame.display.update()
@@ -206,6 +210,7 @@ if usr[0]:
     scr = game(sc, usr[1])
     print("Your score is", scr)
     write_to_file(str(usr[1]) + "  " + str(scr) + '\n')
-    print(read_from_file()[0])
+    print(read_from_file())
+    print(type(read_from_file()))
 
 pygame.quit()

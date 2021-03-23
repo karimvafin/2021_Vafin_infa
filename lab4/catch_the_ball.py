@@ -176,15 +176,46 @@ def menu():
     return user
 
 
+def sort_dict(d):
+    helplist = list(d.keys())
+    helplist.sort(reverse=True)
+    d2 = {}
+    for i in range(len(helplist)):
+        d2[helplist[i]] = d[helplist[i]]
+    return d2
+
+
 def write_to_file(data):
-    f = open('scores.txt', 'a')
-    f.write(data)
+    data = data.split("  ")
+    d = read_from_file()
+
+    # проверка на совпадениеи имени
+    list_keys = list(d.keys())
+    for i in range(len(list_keys)):
+        if d.get(list_keys[i]) == data[0]:
+            if int(data[1]) > list_keys[i]:
+                d.pop(list_keys[i])
+            else:
+                return
+
+    d[int(data[1])] = data[0]
+    d = sort_dict(d)
+    f = open('scores.txt', 'w')
+    helplist = list(d.keys())
+    string = ""
+    for i in range(len(helplist)):
+        string += str(d[helplist[i]]) + "  " + str(helplist[i]) + "\n"
+    f.write(string)
     f.close()
 
 
 def read_from_file():
     f = open('scores.txt', 'r')
-    data = f.read()
+    data = {}
+    for line in f:
+        line = line.split("  ")
+        data[int(line[1])] = line[0]
+    f.close()
     return data
 
 

@@ -105,35 +105,48 @@ class Ball:
 
 class Gun:
 
-    def __init__(self, is_tank):
+    def __init__(self, x, is_tank, orient='Right', active=False):
         self.position = [0, 0]  # position of mouse
         self.f2_power = 1
         self.f2_on = 0
-        self.an = 1
+        self.orient = orient
+        if self.orient == 'Right':
+            self.an = 1
+        else:
+            self.an = 2.14
         self.color = BLACK
         self.hit = False
-        self.r = 40
-        self.x = 50
+        self.r = 40  # this field is for checking the collision
+        self.x = x
         self.y = 420
-        self.A = (self.x - 10 * math.sin(self.an), self.y - 10 * math.cos(self.an))
-        self.B = (self.x + 10 * math.sin(self.an), self.y + 10 * math.cos(self.an))
-        self.C = (self.x + self.f2_power * 100 * math.cos(self.an) + 10 * math.sin(self.an), self.y - self.f2_power
-                  * 100 * math.sin(self.an) + 10 * math.cos(self.an))
-        self.D = (self.x + self.f2_power * 100 * math.cos(self.an) - 10 * math.sin(self.an), self.y - self.f2_power
-                  * 100 * math.sin(self.an) - 10 * math.cos(self.an))
-        self.type = is_tank
+        self.A = (self.x - 5 * math.sin(self.an), self.y - 5 * math.cos(self.an))
+        self.B = (self.x + 5 * math.sin(self.an), self.y + 5 * math.cos(self.an))
+        self.C = (self.x + self.f2_power * 25 * math.cos(self.an) + 5 * math.sin(self.an), self.y - self.f2_power
+                  * 25 * math.sin(self.an) + 5 * math.cos(self.an))
+        self.D = (self.x + self.f2_power * 25 * math.cos(self.an) - 5 * math.sin(self.an), self.y - self.f2_power
+                  * 25 * math.sin(self.an) - 5 * math.cos(self.an))
+        self.type = is_tank  # if True it is a tank
         self.hp = 100
+        self.active = active
 
     def move_gun(self):
         """
         Moves the gun in dependence of keys
         :return:
         """
-        if pygame.key.get_pressed()[pygame.K_LEFT]:
+        if pygame.key.get_pressed()[pygame.K_LEFT] and self.x > 50:
             self.x -= 3
-        if pygame.key.get_pressed()[pygame.K_RIGHT]:
+            if self.orient == 'Right':
+                self.an = 3.14 - self.an
+            self.orient = 'Left'
+        if pygame.key.get_pressed()[pygame.K_RIGHT] and self.x < 750:
             self.x += 3
-        self.draw_gun()
+            if self.orient != 'Right':
+                self.an = 3.14 - self.an
+            self.orient = 'Right'
+
+    def activation(self):
+        self.active = not self.active
 
     def draw_gun(self):
         """
@@ -142,11 +155,18 @@ class Gun:
         """
         pygame.draw.polygon(screen, self.color, (self.C, self.D, self.A, self.B))
         if self.type:
-            pygame.draw.polygon(screen, self.color, ((self.x + 10, self.y - 10), (self.x + 15, self.y + 10),
-                                                     (self.x - 50, self.y + 10), (self.x - 45, self.y - 10)))
-            pygame.draw.polygon(screen, self.color, ((self.x - 60, self.y + 10), (self.x + 40, self.y + 10),
-                                                     (self.x + 50, self.y + 20),
-                                                     (self.x + 45, self.y + 35), (self.x - 55, self.y + 35)))
+            if self.orient == 'Right':
+                pygame.draw.polygon(screen, self.color, ((self.x + 10, self.y - 10), (self.x + 15, self.y + 10),
+                                                        (self.x - 50, self.y + 10), (self.x - 45, self.y - 10)))
+                pygame.draw.polygon(screen, self.color, ((self.x - 60, self.y + 10), (self.x + 40, self.y + 10),
+                                                        (self.x + 50, self.y + 20),
+                                                        (self.x + 45, self.y + 35), (self.x - 55, self.y + 35)))
+            if self.orient == 'Left':
+                pygame.draw.polygon(screen, self.color, ((self.x - 10, self.y - 10), (self.x - 15, self.y + 10),
+                                                         (self.x + 50, self.y + 10), (self.x + 45, self.y - 10)))
+                pygame.draw.polygon(screen, self.color, ((self.x + 60, self.y + 10), (self.x - 40, self.y + 10),
+                                                         (self.x - 50, self.y + 20),
+                                                         (self.x - 45, self.y + 35), (self.x + 55, self.y + 35)))
 
     def fire2_start(self):
         self.f2_on = 1
@@ -164,21 +184,41 @@ class Gun:
         self.f2_on = 0
         self.f2_power = 1
 
+    def change_angle(self):
+        an = self.an
+        if not self.type and self.position[0] - self.x != 0 and self.position[0] < self.x:
+            an = 3.14 - math.atan((self.position[1] - self.y) / (self.position[0] - self.x))
+        if self.position[0] - self.x != 0 and self.position[0] > self.x and self.orient == 'Right':
+            an = - math.atan((self.position[1] - self.y) / (self.position[0] - self.x))
+        if self.position[0] - self.x != 0 and self.position[0] < self.x and self.orient == 'Left':
+            an = math.atan((self.position[1] - self.y) / (self.position[0] - self.x))
+        if self.position[0] - self.x == 0:
+            if self.position[1] > self.y:
+                an = -1.57
+            if self.position[1] <= self.y:
+                an = 1.57
+        if self.orient == 'Right' or not self.type:
+            self.an = an
+        else:
+            self.an = 3.14 - an
+
     def targetting(self):
         """
         Rotates the gun
         :return:
         """
         self.position = pygame.mouse.get_pos()
-        if not self.type and self.position[0] - self.x != 0 and self.position[0] < self.x:
-            self.an = 3.14 - math.atan((self.position[1] - self.y) / (self.position[0] - self.x))
-        if self.position[0] - self.x != 0 and self.position[0] > self.x:
-            self.an = - math.atan((self.position[1] - self.y) / (self.position[0] - self.x))
-        if self.position[0] - self.x == 0:
-            if self.position[1] > self.y:
-                self.an = -1.57
-            if self.position[1] <= self.y:
-                self.an = 1.57
+        if not self.type:
+            self.change_angle()
+        else:
+            if self.position[0] - self.x != 0:
+                new_an = - math.atan((self.position[1] - self.y) / (self.position[0] - self.x))
+            else:
+                new_an = 1.57
+            if 0 < new_an < 1 and self.orient == 'Right':
+                self.change_angle()
+            if -1 < new_an < 0 and self.orient == 'Left' and self.position[0] < self.x:
+                self.change_angle()
         if self.f2_on:
             self.color = ORANGE
         else:

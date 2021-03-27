@@ -7,11 +7,11 @@ FPS = 60
 EXIT = False
 
 
-def print_text(txt, color, position, size):
+def print_text(txt, color, position, size, background=WHITE):
     f1 = pygame.font.Font('/Users/karimvafin/opt/anaconda3/pkgs/matplotlib-base-3.3.2-py38h181983e_0/lib/python3.8/'
                           'site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSansMono-Oblique.ttf', size)
     text1 = f1.render(txt, True,
-                      color, WHITE)
+                      color, background)
 
     screen.blit(text1, position)
 
@@ -30,7 +30,8 @@ def new_game():
     t2.live = 1
     text = ''
     count = 0
-    g1.hp = 100  # setting hp
+    for g in Guns:
+        g.hp = 100
 
     while not finished:
         clock.tick(FPS)
@@ -41,42 +42,24 @@ def new_game():
                 finished = True  # start next game
                 EXIT = True  # exit from the program
             if event.type == pygame.MOUSEBUTTONUP:
-                g1.fire2_end(event)
+                for g in Guns:
+                    if g.active:
+                        g.fire2_end(event)
                 if t1.live or t2.live:
                     bullet += 1
             if event.type == pygame.MOUSEBUTTONDOWN:
-                g1.fire2_start()
-
-        # checking for collision of bombs
-        for b in bombs:
-            b.move()
-            if b.hittest(g1):
-                g1.hit = True
-                b.live = 0
-                if g1.hp > 0:
-                    g1.hp -= 10
-                g1.color = RED
-
-            if b.check_alive():  # deleting bombs
-                b.delete_ball()
-
-        if g1.hit:  # timer for YELLOW color of tank
-            count += 1
-            if count == 15:
-                g1.hit = False
-                count = 0
-
-        # drawing objects and text
-        for t in targets:
-            t.draw_target()
-            t.move()
-        g1.targetting()
-        g1.power_up()
-        g1.move_gun()
+                for g in Guns:
+                    if g.active:
+                        g.fire2_start()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    for g in Guns:
+                        g.activation()
 
         print_text(text, BLACK, (200, 200), 20)
         print_text('Your points: ' + str(points), BLACK, (20, 20), 20)
-        print_text('Your HP: ' + str(g1.hp), BLACK, (20, 40), 20)
+        print_text('HP1: ' + str(g1.hp), BLACK, (20, 50), 20)
+        print_text('HP2: ' + str(g2.hp), BLACK, (20, 80), 20)
 
         # processing bullets
         for b in balls:
@@ -99,14 +82,47 @@ def new_game():
             count = 0
             finished = True
 
-        if g1.hp == 0:  # if you died
+        if g1.hp == 0 and g2.hp == 0:  # if you died
             count += 1
             text = 'YOU DIED'
-            print_text(text, BLACK, (150, 200), 100)
+            print_text(text, RED, (150, 200), 100)
             if count == 149:
                 points = 0
 
+        # checking for collision of bombs
+        for b in bombs:
+            b.move()
+            for g in Guns:
+                if b.hittest(g):
+                    g.hit = True
+                    b.live = 0
+                    if g.hp > 0:
+                        g.hp -= 10
+                    g.color = RED
+
+            if b.check_alive():  # deleting bombs
+                b.delete_ball()
+
+        for g in Guns:
+            if g.hit:  # timer for RED color of tank
+                count += 1
+                if count == 15:
+                    g.hit = False
+                    count = 0
+            if g.hp != 0:
+                if g.active:
+                    g.targetting()
+                    g.move_gun()
+                g.draw_gun()
+                g.power_up()
+
+        # drawing objects and text
+        for t in targets:
+            t.draw_target()
+            t.move()
+
         pygame.draw.polygon(screen, BROWN, ((0, 455), (800, 455), (800, 600), (0, 600)))
+        print_text('Press SPACE to change the tank', BLACK, (300, 550), 15, BROWN)
         pygame.display.update()
         screen.fill(WHITE)
 
@@ -117,7 +133,11 @@ clock = pygame.time.Clock()
 t1 = Target('circle')
 t2 = Target('triangle')
 targets = [t2, t1]
-g1 = Gun(True)
+g1 = Gun(80, True, 'Right')
+g2 = Gun(700, True, 'Left')
+Guns = [g1, g2]
+g1.active = True
+g2.active = False
 count = 0
 text = ''
 points = 0

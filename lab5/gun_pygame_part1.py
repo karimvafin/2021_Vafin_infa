@@ -91,6 +91,7 @@ def new_game():
             finished = True
 
         # updating the screen
+        pygame.draw.polygon(screen, BROWN, ((0, 455), (800, 455), (800, 600), (0, 600)))
         pygame.display.update()
         screen.fill(WHITE)
 
@@ -101,7 +102,7 @@ clock = pygame.time.Clock()
 t1 = Target('circle')
 t2 = Target('triangle')
 targets = [t1, t2]
-g1 = Gun(False)
+g1 = Gun(40, False)
 text = ''
 points = 0  # counts your hits
 screen = pygame.display.set_mode((800, 600))

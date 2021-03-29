@@ -147,6 +147,9 @@ class Gun:
 
     def activation(self):
         self.active = not self.active
+        self.color = BLACK
+        self.f2_on = 0
+        self.f2_power = 1
 
     def draw_gun(self):
         """
@@ -251,7 +254,7 @@ class Gun:
 
 class Target:
 
-    def __init__(self, type):
+    def __init__(self, type, activate_in=140):
         """
         Randomly moves the ball in dependence of walls
         :param type: 'circle' or 'triangle'
@@ -264,7 +267,7 @@ class Target:
         self.r = 0
         self.color = choice(COLORS)
         self.type = type
-        self.active = 130  # bombs will be created each self.active iterations
+        self.active = activate_in  # bombs will be created each self.active iterations
 
     def draw_target(self):
         """
@@ -298,18 +301,26 @@ class Target:
 
     def new_target(self):
         """ Initial new target """
-        self.x = rnd(100, 750)
-        self.y = rnd(100, 280)
-        self.r = rnd(5, 50)
+        self.x = rnd(100, 690)
+        self.y = rnd(100, 250)
+        self.r = rnd(10, 40)
 
     def move(self):
         """
         Randomly moves the ball in dependence of walls
         """
-        if self.x > 790 - self.r or self.x < self.r + 10:
+        if self.x > 790 - self.r:
             self.v = - self.v
-        if self.y > 300 - self.r or self.y < self.r + 10:
+            self.x -= 10
+        if self.x < self.r + 10:
             self.v = - self.v
+            self.x += 10
+        if self.y > 320 - self.r:
+            self.v = - self.v
+            self.y -= 10
+        if self.y < self.r + 10:
+            self.v = - self.v
+            self.y += 10
 
         self.angle += rnd(-15, 15) / 100
         self.x += self.v * math.cos(self.angle)

@@ -18,18 +18,28 @@ def print_text(txt, color, position, size, background=WHITE):
 
 def new_game():
     # this variables are to change in this function
-    global g1, targets, screen, balls, bullet, hit, count, text, EXIT, points
+    global g1, targets, screen, balls, bullet, hit, count, text, EXIT, points, number_of_targets
 
     # initializing new targets, counters(bullet, count) and text
-    t1.new_target()
-    t2.new_target()
+
+    number_of_targets += 1
+
+    for i in range(number_of_targets):
+        t1 = Target('circle', rnd(120))
+        t2 = Target('triangle', rnd(120))
+        targets += t1, t2
+
+    for t in targets:
+        t.new_target()
+        t.live = 1
+
+    is_targets_dead = False
     screen.fill(WHITE)
     bullet = 0
     finished = False
-    t1.live = 1
-    t2.live = 1
     text = ''
-    count = 0
+    count1 = 0
+    count2 = 0
     for g in Guns:
         g.hp = 100
 
@@ -43,9 +53,9 @@ def new_game():
                 EXIT = True  # exit from the program
             if event.type == pygame.MOUSEBUTTONUP:
                 for g in Guns:
-                    if g.active:
+                    if g.active and g.hp > 0:
                         g.fire2_end(event)
-                if t1.live or t2.live:
+                if not is_targets_dead:
                     bullet += 1
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for g in Guns:
@@ -60,6 +70,13 @@ def new_game():
         print_text('Your points: ' + str(points), BLACK, (20, 20), 20)
         print_text('HP1: ' + str(g1.hp), BLACK, (20, 50), 20)
         print_text('HP2: ' + str(g2.hp), BLACK, (20, 80), 20)
+        print_text('Level: ' + str(number_of_targets), BLACK, (20, 110), 20)
+
+        # checking target lives matter
+        is_targets_dead = True
+        for t in targets:
+            if t.live == 1:
+                is_targets_dead = False
 
         # processing bullets
         for b in balls:
@@ -68,26 +85,28 @@ def new_game():
                 if b.hittest(t) and t.live:
                     t.live = 0
                     t.hit()
+                    b.delete_ball()
                     points += 1
 
             if b.check_alive():  # deleting bullets if time is up
                 b.delete_ball()
 
-        if not t1.live and not t2.live:  # if targets disappeared
+        if is_targets_dead:  # if targets disappeared
             text = 'Вы уничтожили цели за ' + str(bullet) + ' выстрелов'
             print_text(text, BLACK, (200, 200), 20)
-            count += 1
+            count1 += 1
 
-        if count == 150:
-            count = 0
+        if count1 == 150:
+            count1 = 0
             finished = True
 
         if g1.hp == 0 and g2.hp == 0:  # if you died
-            count += 1
+            count1 += 1
             text = 'YOU DIED'
             print_text(text, RED, (150, 200), 100)
-            if count == 149:
+            if count1 == 149:
                 points = 0
+                number_of_targets = 0
 
         # checking for collision of bombs
         for b in bombs:
@@ -105,10 +124,10 @@ def new_game():
 
         for g in Guns:
             if g.hit:  # timer for RED color of tank
-                count += 1
-                if count == 15:
+                count2 += 1
+                if count2 == 15:
                     g.hit = False
-                    count = 0
+                    count2 = 0
             if g.hp != 0:
                 if g.active:
                     g.targetting()
@@ -118,21 +137,22 @@ def new_game():
 
         # drawing objects and text
         for t in targets:
-            t.draw_target()
-            t.move()
+            if t.live == 1:
+                t.draw_target()
+                t.move()
 
         pygame.draw.polygon(screen, BROWN, ((0, 455), (800, 455), (800, 600), (0, 600)))
-        print_text('Press SPACE to change the tank', BLACK, (300, 550), 15, BROWN)
+        print_text('Press SPACE to change the tank', BLACK, (270, 550), 15, BROWN)
         pygame.display.update()
         screen.fill(WHITE)
+    targets = []
 
 
 clock = pygame.time.Clock()
 
 # initializing class objects and other variables
-t1 = Target('circle')
-t2 = Target('triangle')
-targets = [t2, t1]
+targets = []
+number_of_targets = 0
 g1 = Gun(80, True, 'Right')
 g2 = Gun(700, True, 'Left')
 Guns = [g1, g2]
